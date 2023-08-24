@@ -1,14 +1,27 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use base64::Engine;
+use image::ImageFormat;
+use wasm_bindgen::prelude::*;
+use web_sys::console::log_1 as log;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[wasm_bindgen]
+pub fn grayscale(encoded_file: &str) -> String {
+    log(&"Grayscale called".into());
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(encoded_file)
+        .unwrap();
+    log(&"Image decoded".into());
+
+    let img = image::load_from_memory(&bytes).unwrap();
+    log(&"Image loaded".into());
+
+    let img = img.grayscale();
+    log(&"Grayscale effect applied".into());
+
+    let mut buffer = Vec::new();
+    img.write_to(&mut buffer, ImageFormat::Png).unwrap();
+    log(&"New image written".into());
+
+    let encoded_image = base64::engine::general_purpose::STANDARD.encode(&buffer);
+    format!("data:image/png;base64,{encoded_image}")
 }
